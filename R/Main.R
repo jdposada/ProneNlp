@@ -69,7 +69,7 @@ connectionDetails <- DatabaseConnector::createConnectionDetails(dbms="bigquery",
 
 
 # Create Cohort Table
-renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/CreateCohortTable.sql"),
+renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/create_cohort_table.sql"),
                                  cdmDatabaseSchema=target_database_schema,
                                  warnOnMissingParameters = TRUE)
 
@@ -78,7 +78,12 @@ translatedSql <- SqlRender::translate(sql=renderedSql,
                                       tempEmulationSchema = target_database_schema)
 
 
+con = DatabaseConnector::connect(connectionDetails)
+DatabaseConnector::executeSql(connection=con,
+                              sql=translatedSql)
+DatabaseConnector::disconnect(con)
 
+# Cohort 1: 
 
 ############################################################################
 #Procedure Exclusion cohort. 
