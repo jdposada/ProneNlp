@@ -30,6 +30,9 @@ jsonPath <- ""
 bqDriverPath <- "/workdir/workdir/BQDriver/"
 project_id <- "som-nero-nigam-starr"
 dataset_id <- "prone_nlp"
+#output folder for notes
+notes_folder <- paste0(working_directory,"/ProneNotes_NoProc/")
+system(paste0("mkdir ", notes_folder))
 
 cdm_database_schema <- ""
 vocabulary_database_schema <- cdm_database_schema
@@ -83,8 +86,9 @@ DatabaseConnector::executeSql(connection=con,
                               sql=translatedSql)
 DatabaseConnector::disconnect(con)
 
-# Cohort 1: 
-renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/exposure/covid_prone_T_Proc_Excl.sql"),
+# Cohort 1:
+target_cohort_id <- "141"
+renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/target/covid_prone_T_Proc_Excl.sql"),
                                  cdm_database_schema=cdm_database_schema,
                                  vocabulary_database_schema=vocabulary_database_schema,
                                  target_database_schema=target_database_schema,
@@ -103,38 +107,9 @@ DatabaseConnector::executeSql(connection=con,
 DatabaseConnector::disconnect(con)
 
 
-############################################################################
-#Procedure Exclusion cohort. 
-############################################################################
-#output folder for notes
-notes_folder = paste0(working_directory,"/ProneNotes_NoProc/")
-system(paste0("mkdir ", notes_folder))
-
-# Names and IDs of cohort tables to be created
-target_cohort_table <- "covid_hosp_no_proc_cohort"
-target_cohort_id <- "141"
-
-# Create Cohort Table for Prone Procedure Exclusion Cohort 
-setwd(package_directory)
-renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/CreateNoProcCohortTable.sql"),
-                                 cdmDatabaseSchema=target_database_schema,
-                                 warnOnMissingParameters = TRUE)
-
-translatedSql <- SqlRender::translate(sql=renderedSql,
-                                      targetDialect = connectionDetails$dbms,
-                                      tempEmulationSchema = target_database_schema)
-
-con = DatabaseConnector::connect(connectionDetails)
-DatabaseConnector::executeSql(connection=DatabaseConnector::connect(connectionDetails),
-                              sql=translatedSql)
-DatabaseConnector::disconnect(con)
-
-
-
-# Run the procedure exclusion cohort
-# Copied from T_Cohort folder in repo (May 2022) to inst/sql/sql_server/exposure/covid_prone_T_SgxExcl.sql
-setwd(package_directory)
-renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/exposure/covid_prone_T_Proc_Excl.sql"),
+# Cohort 2:
+target_cohort_id <- "142"
+renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/target/covid_prone_T2_Proc_Excl.sql"),
                                  cdm_database_schema=cdm_database_schema,
                                  vocabulary_database_schema=vocabulary_database_schema,
                                  target_database_schema=target_database_schema,
@@ -146,25 +121,33 @@ translatedSql <- SqlRender::translate(sql=renderedSql,
                                       targetDialect = connectionDetails$dbms,
                                       tempEmulationSchema = target_database_schema)
 
-con =DatabaseConnector::connect(connectionDetails)
-DatabaseConnector::executeSql(connection=con,sql=translatedSql)
-DatabaseConnector::disconnect(con)
-
-
-# Subset the CDM for the procedure exclusion cohort. 
-setwd(package_directory)
-
-source("R/cdmSubset.R")
 
 con = DatabaseConnector::connect(connectionDetails)
-
-subsetCDM(cohortId=target_cohort_id,
-          cohortTable=target_cohort_table,
-          cdmDatabaseSchema=cdm_database_schema, 
-          resultDatabaseSchema=target_database_schema,
-          connectionDetails=connectionDetails)                               
-
+DatabaseConnector::executeSql(connection=con,
+                              sql=translatedSql)
 DatabaseConnector::disconnect(con)
+
+
+# Cohort 3:
+target_cohort_id <- "143"
+renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/target/covid_prone_T3_Proc_Excl_OnDex.sql"),
+                                 cdm_database_schema=cdm_database_schema,
+                                 vocabulary_database_schema=vocabulary_database_schema,
+                                 target_database_schema=target_database_schema,
+                                 target_cohort_table=target_cohort_table,
+                                 target_cohort_id=target_cohort_id,
+                                 warnOnMissingParameters = TRUE)
+
+translatedSql <- SqlRender::translate(sql=renderedSql,
+                                      targetDialect = connectionDetails$dbms,
+                                      tempEmulationSchema = target_database_schema)
+
+
+con = DatabaseConnector::connect(connectionDetails)
+DatabaseConnector::executeSql(connection=con,
+                              sql=translatedSql)
+DatabaseConnector::disconnect(con)
+
 
 # Download the clinical notes from the subset
 setwd(working_directory)
