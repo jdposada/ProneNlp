@@ -12,7 +12,7 @@ Requires:
 -- Aggregate and combine output to a patient/admission-level
 ----------------------------------------------------------------------------------------------------------------------------------------------------------
 
-drop table if exists @result_schema. @nlp_admission_summary;
+drop table if exists @result_schema.@nlp_admission_summary;
 
 create table
  @result_schema.@nlp_admission_summary as
