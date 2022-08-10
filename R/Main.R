@@ -51,6 +51,15 @@ nlp_output_filename_t3 <- "nlp_output_leo_t3.csv"
 nlp_table_leo_output_t1 <- "leo_output_t1"
 nlp_table_leo_output_t2 <- "leo_output_t2"
 nlp_table_leo_output_t3 <- "leo_output_t3"
+nlp_admission_summary_t1 <- "nlp_summary_t1"
+nlp_admission_summary_t2 <- "nlp_summary_t2"
+nlp_admission_summary_t3 <- "nlp_summary_t3"
+target_cohort_id_t1 <- "141"
+target_cohort_id_t2 <- "142"
+target_cohort_id_t3 <- "143"
+subset_table_name_t1 <- "note_t1"
+subset_table_name_t2 <- "note_t2"
+subset_table_name_t3 <- "note_t3"
 
 # Load libraries
 library(dplyr)
@@ -88,13 +97,12 @@ DatabaseConnector::disconnect(con)
 
 # Cohort 1:
 
-target_cohort_id <- "141"
 renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/target/covid_prone_T_Proc_Excl.sql"),
                                  cdm_database_schema=cdm_database_schema,
                                  vocabulary_database_schema=vocabulary_database_schema,
                                  target_database_schema=target_database_schema,
                                  target_cohort_table=target_cohort_table,
-                                 target_cohort_id=target_cohort_id,
+                                 target_cohort_id=target_cohort_id_t1,
                                  warnOnMissingParameters = TRUE)
 
 translatedSql <- SqlRender::translate(sql=renderedSql,
@@ -109,13 +117,12 @@ DatabaseConnector::disconnect(con)
 
 
 # Cohort 2:
-target_cohort_id <- "142"
 renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/target/covid_prone_T2_Proc_Excl.sql"),
                                  cdm_database_schema=cdm_database_schema,
                                  vocabulary_database_schema=vocabulary_database_schema,
                                  target_database_schema=target_database_schema,
                                  target_cohort_table=target_cohort_table,
-                                 target_cohort_id=target_cohort_id,
+                                 target_cohort_id=target_cohort_id_t2,
                                  warnOnMissingParameters = TRUE)
 
 translatedSql <- SqlRender::translate(sql=renderedSql,
@@ -130,13 +137,12 @@ DatabaseConnector::disconnect(con)
 
 
 # Cohort 3:
-target_cohort_id <- "143"
 renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/target/covid_prone_T3_Proc_Excl_OnDex.sql"),
                                  cdm_database_schema=cdm_database_schema,
                                  vocabulary_database_schema=vocabulary_database_schema,
                                  target_database_schema=target_database_schema,
                                  target_cohort_table=target_cohort_table,
-                                 target_cohort_id=target_cohort_id,
+                                 target_cohort_id=target_cohort_id_t3,
                                  warnOnMissingParameters = TRUE)
 
 translatedSql <- SqlRender::translate(sql=renderedSql,
@@ -183,30 +189,25 @@ subsetByPersonIdAndDate <- function(cdmTable, cohortId, cohortTable, cdmDatabase
   
 }
 
-target_cohort_id <- "141"
-subset_table_name_t1 <- "note_t1"
 subsetByPersonIdAndDate(cdmTable="note",
-                        cohortId=target_cohort_id,
+                        cohortId=target_cohort_id_t1,
                         cohortTable=target_cohort_table,
                         cdmDatabaseSchema=cdm_database_schema, 
                         resultDatabaseSchema=target_database_schema,
                         subsetTableName=subset_table_name_t1,
                         connectionDetails=connectionDetails)
 
-target_cohort_id <- "142"
-subset_table_name_t2 <- "note_t2"
 subsetByPersonIdAndDate(cdmTable="note",
-                        cohortId=target_cohort_id,
+                        cohortId=target_cohort_id_t2,
                         cohortTable=target_cohort_table,
                         cdmDatabaseSchema=cdm_database_schema, 
                         resultDatabaseSchema=target_database_schema,
                         subsetTableName=subset_table_name_t2,
                         connectionDetails=connectionDetails)
 
-target_cohort_id <- "143"
-subset_table_name_t3 <- "note_t3"
+
 subsetByPersonIdAndDate(cdmTable="note",
-                        cohortId=target_cohort_id,
+                        cohortId=target_cohort_id_t3,
                         cohortTable=target_cohort_table,
                         cdmDatabaseSchema=cdm_database_schema, 
                         resultDatabaseSchema=target_database_schema,
@@ -359,11 +360,49 @@ DatabaseConnector::insertTable(connection = connection,
 # intent_count: INT
 # proneTreatment: [treated, intent, notTreated, noDocumentation]
 
+
+# Cohort 1
+
 renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/nlp_rollup_logic.sql"),
                                  result_schema=target_database_schema,
-                                 nlp_admission_summary=nlp_admission_summary,
+                                 nlp_admission_summary=nlp_admission_summary_t1,
                                  target_cohort=target_cohort_table,
-                                 nlp_raw_output=nlp_raw_output,
+                                 cohortId=target_cohort_id_t1,
+                                 nlp_raw_output=nlp_table_leo_output_t1,
+                                 warnOnMissingParameters = TRUE)
+
+translatedSql <- SqlRender::translate(sql=renderedSql,
+                                      targetDialect = connectionDetails$dbms,
+                                      tempEmulationSchema = target_database_schema)
+
+DatabaseConnector::executeSql(connection=DatabaseConnector::connect(connectionDetails),
+                              sql=translatedSql)
+
+# Cohort 2
+
+renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/nlp_rollup_logic.sql"),
+                                 result_schema=target_database_schema,
+                                 nlp_admission_summary=nlp_admission_summary_t2,
+                                 target_cohort=target_cohort_table,
+                                 cohortId=target_cohort_id_t2,
+                                 nlp_raw_output=nlp_table_leo_output_t2,
+                                 warnOnMissingParameters = TRUE)
+
+translatedSql <- SqlRender::translate(sql=renderedSql,
+                                      targetDialect = connectionDetails$dbms,
+                                      tempEmulationSchema = target_database_schema)
+
+DatabaseConnector::executeSql(connection=DatabaseConnector::connect(connectionDetails),
+                              sql=translatedSql)
+
+# Cohort 3
+
+renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/nlp_rollup_logic.sql"),
+                                 result_schema=target_database_schema,
+                                 nlp_admission_summary=nlp_admission_summary_t3,
+                                 target_cohort=target_cohort_table,
+                                 cohortId=target_cohort_id_t3,
+                                 nlp_raw_output=nlp_table_leo_output_t3,
                                  warnOnMissingParameters = TRUE)
 
 translatedSql <- SqlRender::translate(sql=renderedSql,
