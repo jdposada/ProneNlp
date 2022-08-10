@@ -14,11 +14,15 @@ Requires:
 
 drop table if exists @result_schema. @nlp_admission_summary;
 
+create table
+ @result_schema.@nlp_admission_summary as
 with all_covid_admissions as (
-    select subject_id as person_id,
-        cohort_start_date,
-        cohort_end_date
-    from @result_schema. @target_cohort
+    select 
+     subject_id as person_id,
+     cohort_start_date,
+     cohort_end_date
+    from 
+     @result_schema.@target_cohort
 ),
 NLP_labels_all as (
     Select person_id >,
@@ -42,7 +46,8 @@ NLP_labels_all as (
                 else 0
             end
         ) as Intent
-    FROM @result_schema. @nlp_raw_output
+    from 
+     @result_schema.@nlp_raw_output
     group by person_id
 ),
 rolled_up_summary as (
@@ -62,11 +67,16 @@ rolled_up_summary as (
         Treated as Treated_Count,
         NotTreated as NotTreated_Count,
         Intent as Intent_count
-    from all_covid_admissions coh
-        left join NLP_labels_all nlp on coh.person_id = nlp.person_id
+    from 
+     all_covid_admissions coh
+    left join 
+     NLP_labels_all nlp 
+    on 
+     coh.person_id = nlp.person_id
 )
-Select rolled_up_summary.* --Single label per admission
-,
+--Single label per admission
+select 
+ rolled_up_summary.*,
     case
         when Treated >= 1 then 'Treated'
         when Intent >= 1
@@ -74,5 +84,6 @@ Select rolled_up_summary.* --Single label per admission
         and NotTreated >= 0 then 'Intent' --Setting intent to override when negation occurs
         When NotTreated >= 1 then 'NotTreated'
         Else 'NoDocumentation'
-    end as ProneTreatment into @result_schema. @nlp_admission_summary
-from rolled_up_summary
+    end as ProneTreatment 
+from 
+ rolled_up_summary
