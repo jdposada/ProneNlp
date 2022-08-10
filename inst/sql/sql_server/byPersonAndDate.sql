@@ -1,5 +1,5 @@
 CREATE TABLE 
- @resultDatabaseSchema.@cdmTable AS
+ @resultDatabaseSchema.@subsetTableName AS
   SELECT
     table_.*
   FROM
