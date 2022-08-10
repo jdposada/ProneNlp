@@ -23,6 +23,8 @@ with all_covid_admissions as (
      cohort_end_date
     from 
      @result_schema.@target_cohort
+    where
+     cohort_definition_id = @cohortId
 ),
 NLP_labels_all as (
     Select person_id >,
