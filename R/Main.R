@@ -149,6 +149,65 @@ DatabaseConnector::executeSql(connection=con,
 DatabaseConnector::disconnect(con)
 
 
+# Subset the NOTE table to download only the notes for each cohort
+
+
+subsetByPersonIdAndDate <- function(cdmTable, cohortId, cohortTable, cdmDatabaseSchema, 
+                                  resultDatabaseSchema, connectionDetails) {
+  
+  "
+  Subset the CDM table by using person_id and cohort start and end date
+  "
+  
+  # get the appropriate date column
+  dateColumn <- note_date
+  
+  renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/byPersonAndDate.sql"),
+                                   resultDatabaseSchema=resultDatabaseSchema,
+                                   cdmDatabaseSchema=cdmDatabaseSchema,
+                                   cdmTable=cdmTable,
+                                   cohortTable=cohortTable,
+                                   cohortId=cohortId,
+                                   dateColumn=dateColumn,
+                                   warnOnMissingParameters = TRUE)
+  
+  translatedSql <- SqlRender::translate(sql=renderedSql,
+                                        targetDialect = connectionDetails$dbms,
+                                        tempEmulationSchema = target_database_schema)
+  
+  con = DatabaseConnector::connect(connectionDetails)
+  DatabaseConnector::executeSql(connection = con, sql = translatedSql)
+  DatabaseConnector::disconnect(con)
+  
+}
+
+target_cohort_id <- "141"
+subsetByPersonIdAndDate(cdmTable="note",
+                        cohortId=target_cohort_id,
+                        cohortTable=target_cohort_table,
+                        cdmDatabaseSchema=cdm_database_schema, 
+                        resultDatabaseSchema=target_database_schema,
+                        connectionDetails=connectionDetails)
+
+target_cohort_id <- "142"
+subsetByPersonIdAndDate(cdmTable="note",
+                        cohortId=target_cohort_id,
+                        cohortTable=target_cohort_table,
+                        cdmDatabaseSchema=cdm_database_schema, 
+                        resultDatabaseSchema=target_database_schema,
+                        connectionDetails=connectionDetails)
+
+target_cohort_id <- "143"
+subsetByPersonIdAndDate(cdmTable="note",
+                        cohortId=target_cohort_id,
+                        cohortTable=target_cohort_table,
+                        cdmDatabaseSchema=cdm_database_schema, 
+                        resultDatabaseSchema=target_database_schema,
+                        connectionDetails=connectionDetails)
+
+
+
+
 # Download the clinical notes from the subset
 setwd(working_directory)
 
