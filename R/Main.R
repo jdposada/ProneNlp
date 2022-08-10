@@ -84,6 +84,24 @@ DatabaseConnector::executeSql(connection=con,
 DatabaseConnector::disconnect(con)
 
 # Cohort 1: 
+renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/exposure/covid_prone_T_Proc_Excl.sql"),
+                                 cdm_database_schema=cdm_database_schema,
+                                 vocabulary_database_schema=vocabulary_database_schema,
+                                 target_database_schema=target_database_schema,
+                                 target_cohort_table=target_cohort_table,
+                                 target_cohort_id=target_cohort_id,
+                                 warnOnMissingParameters = TRUE)
+
+translatedSql <- SqlRender::translate(sql=renderedSql,
+                                      targetDialect = connectionDetails$dbms,
+                                      tempEmulationSchema = target_database_schema)
+
+
+con = DatabaseConnector::connect(connectionDetails)
+DatabaseConnector::executeSql(connection=con,
+                              sql=translatedSql)
+DatabaseConnector::disconnect(con)
+
 
 ############################################################################
 #Procedure Exclusion cohort. 
