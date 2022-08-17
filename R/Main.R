@@ -1,4 +1,4 @@
-# Copyright 2021 Observational Health Data Sciences and Informatics
+# Copyright 2022 Observational Health Data Sciences and Informatics
 #
 # This file is part of ProneNlp
 #
@@ -14,34 +14,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+# Load libraries
+library(dplyr)
+library(stringr)
+library(DatabaseConnector)
+library(SqlRender)
 
-# Environment Setup
 working_directory <- "/workdir/workdir"
-package_directory <- "/workdir/workdir/OHDSI_prone_eminty/"
 setwd(working_directory)
-r_env_cache_folder <- "/workdir/renv_cache"
-renv_package_version <- '0.13.2'
-renv_vesion <- "v5"
-r_version <- "R-4.0"
-linux_version <- "x86_64-pc-linux-gnu"
-renv_final_path <- paste(r_env_cache_folder,
-                         renv_vesion,
-                         r_version,
-                         linux_version,
-                         sep="/")
-
-.libPaths(renv_final_path)
-
-
-jsonPath <- ""
-bqDriverPath <- "/workdir/workdir/BQDriver/"
-project_id <- "som-nero-nigam-starr"
-dataset_id <- "prone_nlp"
-
-cdm_database_schema <- ""
-vocabulary_database_schema <- cdm_database_schema
-target_database_schema <- "`som-nero-nigam-starr.prone_nlp`"
-
 
 nlp_admission_summary <- "nlp_admission_summary"
 
@@ -61,12 +41,18 @@ subset_table_name_t1 <- "note_t1"
 subset_table_name_t2 <- "note_t2"
 subset_table_name_t3 <- "note_t3"
 
-# Load libraries
-library(dplyr)
-library(stringr)
 
+jsonPath <- "/workdir/gcloud/application_default_credentials.json"
+bqDriverPath <- "/workdir/workdir/BQDriver/"
+project_id <- "som-nero-nigam-starr"
+dataset_id <- "prone_nlp"
 
-# Connecto to Database
+cdm_database_schema <- ""
+vocabulary_database_schema <- cdm_database_schema
+target_database_schema <- "`som-nero-nigam-starr.prone_nlp`"
+target_cohort_table <- "cohort"
+
+# Connect to Database
 
 connectionString <-  BQJdbcConnectionStringR::createBQConnectionString(projectId = project_id,
                                                                        defaultDataset = dataset_id,
@@ -78,7 +64,20 @@ connectionDetails <- DatabaseConnector::createConnectionDetails(dbms="bigquery",
                                                                 user="",
                                                                 password='',
                                                                 pathToDriver = bqDriverPath)
-
+# # Create a test connection
+# connection <- DatabaseConnector::connect(connectionDetails)
+# 
+# sql <- "
+# SELECT
+#  COUNT(1) as counts
+# FROM
+#  `bigquery-public-data.cms_synthetic_patient_data_omop.care_site`
+# "
+# 
+# counts <- DatabaseConnector::querySql(connection, sql)
+# 
+# print(counts)
+# DatabaseConnector::disconnect(connection)
 
 # Create Cohort Table
 renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/create_cohort_table.sql"),
@@ -97,7 +96,7 @@ DatabaseConnector::disconnect(con)
 
 # Cohort 1:
 
-renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/target/covid_prone_T_Proc_Excl.sql"),
+renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/target/covid_prone_T1_Baseline_Hosp_TestPos_OR_Condn.sql"),
                                  cdm_database_schema=cdm_database_schema,
                                  vocabulary_database_schema=vocabulary_database_schema,
                                  target_database_schema=target_database_schema,
