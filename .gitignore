@@ -72,3 +72,4 @@ BQDriver/Simba Google BigQuery JDBC Connector Install and Configuration Guide.pd
 BQDriver/slf4j-api-1.7.30.jar
 BQDriver/third-party-licenses.txt
 BQDriver/threetenbp-1.5.1.jar
+errorReportSql.txt
