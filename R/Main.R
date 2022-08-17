@@ -49,7 +49,7 @@ dataset_id <- "prone_nlp"
 
 cdm_database_schema <- ""
 vocabulary_database_schema <- cdm_database_schema
-target_database_schema <- "`som-nero-nigam-starr.prone_nlp`"
+target_database_schema <- "som-nero-nigam-starr.prone_nlp"
 target_cohort_table <- "cohort"
 
 # Connect to Database
@@ -166,7 +166,7 @@ subsetByPersonIdAndDate <- function(cdmTable, cohortId, cohortTable, cdmDatabase
   "
   
   # get the appropriate date column
-  dateColumn <- note_date
+  dateColumn <- "note_date"
   
   renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/byPersonAndDate.sql"),
                                    resultDatabaseSchema=resultDatabaseSchema,
