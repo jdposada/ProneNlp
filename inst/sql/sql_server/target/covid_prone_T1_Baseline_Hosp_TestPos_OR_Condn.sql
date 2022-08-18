@@ -144,7 +144,7 @@ from
 JOIN #Codesets cs on (vo.visit_concept_id = cs.concept_id and cs.codeset_id = 5)
 ) C
 
-WHERE (C.visit_start_date >= DATEFROMPARTS(2021, 3, 1) and C.visit_start_date <= DATEFROMPARTS(2021, 11, 1))
+WHERE (C.visit_start_date >= DATEFROMPARTS(2019, 12, 1) and C.visit_start_date <= DATEFROMPARTS(2021, 11, 1))
 -- End Visit Occurrence Criteria
 
   ) E
