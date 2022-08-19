@@ -20,7 +20,11 @@ library(stringr)
 library(DatabaseConnector)
 library(SqlRender)
 
-working_directory <- "/workdir/workdir"
+
+#Github credentials
+source("githubCreds.R")
+
+working_directory <- "/workdir/workdir/"
 setwd(working_directory)
 
 nlp_admission_summary <- "nlp_admission_summary"
@@ -223,7 +227,7 @@ write_notes <- function(x, notes_folder) {
   note_id <- x['NOTE_ID']
   person_id <- x['PERSON_ID']
   note_text <- x['NOTE_TEXT']
-  fileName <- paste0(notes_folder, person_id, "_", note_id, ".txt")
+  fileName <- paste0(notes_folder,"/",person_id, "_", note_id, ".txt")
   cat(note_text, file=fileName , append = F, fill = F)
 }
 
@@ -231,7 +235,7 @@ write_notes <- function(x, notes_folder) {
 
 # Output folder for notes
 notes_folder_t1 <- paste0(working_directory, subset_table_name_t1)
-system(paste0("mkdir ", notes_folder))
+system(paste0("mkdir ", notes_folder_t1))
 
 con = DatabaseConnector::connect(connectionDetails)
 
@@ -254,7 +258,7 @@ apply(notes_df, 1, write_notes, notes_folder=notes_folder_t1)
 
 # Output folder for notes
 notes_folder_t2 <- paste0(working_directory, subset_table_name_t2)
-system(paste0("mkdir ", notes_folder))
+system(paste0("mkdir ", notes_folder_t2))
 
 con = DatabaseConnector::connect(connectionDetails)
 
@@ -277,7 +281,7 @@ apply(notes_df, 1, write_notes, notes_folder=notes_folder_t2)
 
 # Output folder for notes
 notes_folder_t3 <- paste0(working_directory, subset_table_name_t3)
-system(paste0("mkdir ", notes_folder))
+system(paste0("mkdir ", notes_folder_t3))
 
 con = DatabaseConnector::connect(connectionDetails)
 
