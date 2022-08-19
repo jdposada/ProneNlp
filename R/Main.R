@@ -21,8 +21,8 @@ library(DatabaseConnector)
 library(SqlRender)
 
 
-#Github credentials
-source("githubCreds.R")
+#Github credentials (and adds itself to .gitignore), if needed.
+#source("githubCreds.R")
 
 working_directory <- "/workdir/workdir/"
 setwd(working_directory)
@@ -51,7 +51,9 @@ bqDriverPath <- "/workdir/workdir/BQDriver/"
 project_id <- "som-nero-nigam-starr"
 dataset_id <- "prone_nlp"
 
-cdm_database_schema <- ""
+#cdm_database_schema <- ""
+#defines cdm_database_schema and adds itself to .gitignore
+source("cdmDatabaseSchema.R")
 vocabulary_database_schema <- cdm_database_schema
 target_database_schema <- "som-nero-nigam-starr.prone_nlp"
 target_cohort_table <- "cohort"
@@ -84,7 +86,7 @@ connectionDetails <- DatabaseConnector::createConnectionDetails(dbms="bigquery",
 # DatabaseConnector::disconnect(connection)
 
 # Create Cohort Table
-renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/create_cohort_table.sql"),
+renderedSql <- SqlRender::render(SqlRender::readSql("ProneNlp/inst/sql/sql_server/create_cohort_table.sql"),
                                  cdmDatabaseSchema=target_database_schema,
                                  warnOnMissingParameters = TRUE)
 
@@ -100,7 +102,7 @@ DatabaseConnector::disconnect(con)
 
 # Cohort 1:
 
-renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/target/covid_prone_T1_Baseline_Hosp_TestPos_OR_Condn.sql"),
+renderedSql <- SqlRender::render(SqlRender::readSql("ProneNlp/inst/sql/sql_server/target/covid_prone_T1_Baseline_Hosp_TestPos_OR_Condn.sql"),
                                  cdm_database_schema=cdm_database_schema,
                                  vocabulary_database_schema=vocabulary_database_schema,
                                  target_database_schema=target_database_schema,
@@ -120,7 +122,7 @@ DatabaseConnector::disconnect(con)
 
 
 # Cohort 2:
-renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/target/covid_prone_T2_Proc_Excl.sql"),
+renderedSql <- SqlRender::render(SqlRender::readSql("ProneNlp/inst/sql/sql_server/target/covid_prone_T2_Proc_Excl.sql"),
                                  cdm_database_schema=cdm_database_schema,
                                  vocabulary_database_schema=vocabulary_database_schema,
                                  target_database_schema=target_database_schema,
@@ -172,8 +174,8 @@ subsetByPersonIdAndDate <- function(cdmTable, cohortId, cohortTable, cdmDatabase
   # get the appropriate date column
   dateColumn <- "note_date"
   
-  renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/byPersonAndDate.sql"),
-                                   resultDatabaseSchema=resultDatabaseSchema,
+  renderedSql <- SqlRender::render(SqlRender::readSql("ProneNlp/inst/sql/sql_server/byPersonAndDate.sql"),
+                                   resultDatabaseSchema=target_database_schema,
                                    cdmDatabaseSchema=cdmDatabaseSchema,
                                    cdmTable=cdmTable,
                                    cohortTable=cohortTable,
