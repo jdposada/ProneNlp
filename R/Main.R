@@ -15,9 +15,10 @@
 # limitations under the License.
 
 # Load libraries
+
+library()
 install.packages("dplyr")
 library(dplyr)
-
 
 library(stringr)
 
@@ -52,6 +53,8 @@ subset_table_name_t1 <- "note_t1"
 subset_table_name_t2 <- "note_t2"
 subset_table_name_t3 <- "note_t3"
 
+leo_nlp_output_folder <- "/workdir/workdir/NLP_Results/"
+
 
 jsonPath <- "/workdir/gcloud/application_default_credentials.json"
 bqDriverPath <- "/workdir/workdir/BQDriver/"
@@ -60,7 +63,7 @@ dataset_id <- "prone_nlp"
 
 #cdm_database_schema <- ""
 #defines cdm_database_schema and adds itself to .gitignore
-source("/workdir/workdir/ProneNlp_RepoAndResults/ProneNlp/cdmDatabaseSchema.R")
+source("/workdir/workdir/ProneNlp/cdmDatabaseSchema.R")
 vocabulary_database_schema <- cdm_database_schema
 target_database_schema <- "som-nero-nigam-starr.prone_nlp"
 target_cohort_table <- "cohort"
@@ -80,17 +83,17 @@ connectionDetails <- DatabaseConnector::createConnectionDetails(dbms="bigquery",
 # # Create a test connection
 # connection <- DatabaseConnector::connect(connectionDetails)
 # 
-# sql <- "
-# SELECT
-#  COUNT(1) as counts
-# FROM
-#  `bigquery-public-data.cms_synthetic_patient_data_omop.care_site`
-# "
-# 
-# counts <- DatabaseConnector::querySql(connection, sql)
-# 
-# print(counts)
-# DatabaseConnector::disconnect(connection)
+sql <- "
+SELECT
+ COUNT(1) as counts
+FROM
+ `bigquery-public-data.cms_synthetic_patient_data_omop.care_site`
+"
+
+counts <- DatabaseConnector::querySql(connection, sql)
+
+print(counts)
+DatabaseConnector::disconnect(connection)
 
 # Create Cohort Table
 renderedSql <- SqlRender::render(SqlRender::readSql("ProneNlp/inst/sql/sql_server/create_cohort_table.sql"),
@@ -316,14 +319,16 @@ apply(notes_df, 1, write_notes, notes_folder=notes_folder_t3)
 # The name of the file should be the same as the one declared on nlp_output_filename
 ##########################################################################################
 
-# Upload the file to the Database. 
+# Upload the file to the Database. Assumes results are in 
+# leo_nlp_output_folder under sub folders T1, T2, T3
 ##########################################################################################
 
 
 # Cohort 1
 
-NLP_result_folder_t1 <- "/workdir/workdir/ProneNlp_RepoAndResults/NLP_Results/T1/"
-output_leo_t1_df = read.csv(paste0(NLP_result_folder_t1, nlp_output_filename_t1))
+output_leo_t1_df = read.csv(paste0(leo_nlp_output_folder,"T1/",nlp_output_filename_t1))
+
+connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
 DatabaseConnector::insertTable(connection = connection,
                                databaseSchema = target_database_schema,
                                tableName=nlp_table_leo_output_t1,
@@ -336,8 +341,10 @@ DatabaseConnector::insertTable(connection = connection,
                                camelCaseToSnakeCase = FALSE
                               )
 
+DatabaseConnector::disconnect(connection)
+
 # Cohort 2
-output_leo_t2_df = read.csv(paste0(notes_folder_t2, nlp_output_filename_t2))
+output_leo_t2_df = read.csv(paste0(leo_nlp_output_folder,"T2/",nlp_output_filename_t2))
 DatabaseConnector::insertTable(connection = connection,
                                databaseSchema = target_database_schema,
                                tableName=nlp_table_leo_output_t2,
@@ -351,7 +358,7 @@ DatabaseConnector::insertTable(connection = connection,
                               )
 
 # Cohort 3
-output_leo_t3_df = read.csv(paste0(notes_folder_t3, nlp_output_filename_t3))
+output_leo_t3_df = read.csv(paste0(leo_nlp_output_folder,"T3/",nlp_output_filename_t3))
 DatabaseConnector::insertTable(connection = connection,
                                databaseSchema = target_database_schema,
                                tableName=nlp_table_leo_output_t3,
@@ -427,7 +434,6 @@ translatedSql <- SqlRender::translate(sql=renderedSql,
 
 DatabaseConnector::executeSql(connection=DatabaseConnector::connect(connectionDetails),
                               sql=translatedSql)
-
 
 
 
