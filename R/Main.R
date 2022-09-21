@@ -15,10 +15,17 @@
 # limitations under the License.
 
 # Load libraries
+install.packages("dplyr")
 library(dplyr)
+
+
 library(stringr)
+
+install.packages("DatabaseConnector")
 library(DatabaseConnector)
+
 library(SqlRender)
+library(usethis)
 
 
 #Github credentials (and adds itself to .gitignore), if needed.
@@ -53,7 +60,7 @@ dataset_id <- "prone_nlp"
 
 #cdm_database_schema <- ""
 #defines cdm_database_schema and adds itself to .gitignore
-source("cdmDatabaseSchema.R")
+source("/workdir/workdir/ProneNlp_RepoAndResults/ProneNlp/cdmDatabaseSchema.R")
 vocabulary_database_schema <- cdm_database_schema
 target_database_schema <- "som-nero-nigam-starr.prone_nlp"
 target_cohort_table <- "cohort"
@@ -142,7 +149,7 @@ DatabaseConnector::disconnect(con)
 
 
 # Cohort 3:
-renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/target/covid_prone_T3_Proc_Excl_OnDex.sql"),
+renderedSql <- SqlRender::render(SqlRender::readSql("ProneNlp/inst/sql/sql_server/target/covid_prone_T3_Proc_Excl_NewDex_032021.sql"),
                                  cdm_database_schema=cdm_database_schema,
                                  vocabulary_database_schema=vocabulary_database_schema,
                                  target_database_schema=target_database_schema,
@@ -170,12 +177,12 @@ subsetByPersonIdAndDate <- function(cdmTable, cohortId, cohortTable, cdmDatabase
   "
   Subset the CDM table by using person_id and cohort start and end date
   "
-  
+  setwd(working_directory)
   # get the appropriate date column
   dateColumn <- "note_date"
   
   renderedSql <- SqlRender::render(SqlRender::readSql("ProneNlp/inst/sql/sql_server/byPersonAndDate.sql"),
-                                   resultDatabaseSchema=target_database_schema,
+                                   resultDatabaseSchema=resultDatabaseSchema,
                                    cdmDatabaseSchema=cdmDatabaseSchema,
                                    cdmTable=cdmTable,
                                    cohortTable=cohortTable,
@@ -193,6 +200,7 @@ subsetByPersonIdAndDate <- function(cdmTable, cohortId, cohortTable, cdmDatabase
   DatabaseConnector::disconnect(con)
   
 }
+
 
 subsetByPersonIdAndDate(cdmTable="note",
                         cohortId=target_cohort_id_t1,
@@ -275,7 +283,7 @@ translatedSql <- SqlRender::translate(sql=renderedSql,
 
 notes_df = DatabaseConnector::querySql(connection = con, sql = translatedSql)
 DatabaseConnector::disconnect(con)
-
+ 
 # Write the notes in individual files
 apply(notes_df, 1, write_notes, notes_folder=notes_folder_t2)
 
@@ -308,11 +316,14 @@ apply(notes_df, 1, write_notes, notes_folder=notes_folder_t3)
 # The name of the file should be the same as the one declared on nlp_output_filename
 ##########################################################################################
 
-# Upload the file to the Database. it is assumed that the file lives within the same folder the notes are
+# Upload the file to the Database. 
 ##########################################################################################
 
+
 # Cohort 1
-output_leo_t1_df = read.csv(paste0(notes_folder_t1, nlp_output_filename_t1))
+
+NLP_result_folder_t1 <- "/workdir/workdir/ProneNlp_RepoAndResults/NLP_Results/T1/"
+output_leo_t1_df = read.csv(paste0(NLP_result_folder_t1, nlp_output_filename_t1))
 DatabaseConnector::insertTable(connection = connection,
                                databaseSchema = target_database_schema,
                                tableName=nlp_table_leo_output_t1,
@@ -423,7 +434,6 @@ DatabaseConnector::executeSql(connection=DatabaseConnector::connect(connectionDe
 #####################################################################
 # Compute the incidence rates
 #####################################################################
-
 
 
 
