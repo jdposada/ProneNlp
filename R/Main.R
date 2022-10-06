@@ -332,7 +332,7 @@ apply(notes_df, 1, write_notes, notes_folder=notes_folder_t3)
 
 #load data from csv and split DocID into patient_id and note_id 
 output_leo_t1_df = read.csv(paste0(leo_nlp_output_folder,"T1/",nlp_output_filename_t1)) %>% 
-  tidyr::separate(.,col=DocID, into=c("patient_id","note_id"),sep="_", remove=FALSE) %>%
+  tidyr::separate(.,col=DocID, into=c("person_id","note_id"),sep="_", remove=FALSE) %>%
   tidyr::separate(., col=note_id, into=c("note_id"), sep=".txt",remove=TRUE)
 
 #upload into BigQuery  
@@ -360,7 +360,7 @@ rm(output_leo_t1_df)
 # Cohort 2
 
 output_leo_t2_df = read.csv(paste0(leo_nlp_output_folder,"T2/",nlp_output_filename_t2)) %>%
-  tidyr::separate(.,col=DocID, into=c("patient_id","note_id"),sep="_", remove=FALSE) %>%
+  tidyr::separate(.,col=DocID, into=c("person_id","note_id"),sep="_", remove=FALSE) %>%
   tidyr::separate(., col=note_id, into=c("note_id"), sep=".txt",remove=TRUE)
 
 #upload into BigQuery  
@@ -384,7 +384,7 @@ rm(output_leo_t2_df)
 
 # Cohort 3
 output_leo_t3_df = read.csv(paste0(leo_nlp_output_folder,"T3/",nlp_output_filename_t3))  %>%
-  tidyr::separate(.,col=DocID, into=c("patient_id","note_id"),sep="_", remove=FALSE) %>%
+  tidyr::separate(.,col=DocID, into=c("person_id","note_id"),sep="_", remove=FALSE) %>%
   tidyr::separate(., col=note_id, into=c("note_id"), sep=".txt",remove=TRUE)
 
 #upload into BigQuery  
@@ -421,7 +421,7 @@ rm(output_leo_t3_df)
 
 # Cohort 1
 
-renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/nlp_rollup_logic.sql"),
+renderedSql <- SqlRender::render(SqlRender::readSql("ProneNlp/inst/sql/sql_server/nlp_rollup_logic.sql"),
                                  result_schema=target_database_schema,
                                  nlp_admission_summary=nlp_admission_summary_t1,
                                  target_cohort=target_cohort_table,
@@ -476,26 +476,4 @@ DatabaseConnector::executeSql(connection=DatabaseConnector::connect(connectionDe
 # Compute the incidence rates
 #####################################################################
 
-# debugging: insertTable works with a small dataframe.  
-testrow1=c("A","B","C","D")
-testrow2= c(1,2,3,4)
-
-testdf = as.data.frame(cbind(testrow1,testrow2))
-
-connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
-DatabaseConnector::insertTable(connection = connection,
-                               databaseSchema = target_database_schema,
-                               tableName=nlp_table_leo_output_t1,
-                               data=testdf,
-                               dropTableIfExists = TRUE,
-                               createTable = TRUE,
-                               tempTable = FALSE,
-                               oracleTempSchema = NULL,
-                               progressBar = TRUE,
-                               camelCaseToSnakeCase = FALSE
-)
-
-DatabaseConnector::disconnect(connection)
-
-object.size(output_leo_t1_df)
 
