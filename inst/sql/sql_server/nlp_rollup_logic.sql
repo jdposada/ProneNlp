@@ -27,7 +27,7 @@ with all_covid_admissions as (
      cohort_definition_id = @cohortId
 ),
 NLP_labels_all as (
-    Select person_id >,
+    Select person_id,
         count(*) as ProneTerms,
         sum(
             case
