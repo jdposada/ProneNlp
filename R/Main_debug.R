@@ -28,6 +28,18 @@ library(DatabaseConnector)
 library(SqlRender)
 library(usethis)
 
+library(DBI)
+
+
+
+#billing <- 'som-nero-nigam-starr'
+#project <- 'som-nero-nigam-starr'
+
+#Setting up Google sdk environment
+#path="/workdir/gcloud/application_default_credentials.json"
+
+
+
 
 #Github credentials (and adds itself to .gitignore), if needed.
 #source("githubCreds.R")
@@ -60,6 +72,11 @@ jsonPath <- "/workdir/gcloud/application_default_credentials.json"
 bqDriverPath <- "/workdir/workdir/BQDriver/"
 project_id <- "som-nero-nigam-starr"
 dataset_id <- "prone_nlp"
+
+Sys.setenv(GOOGLE_APPLICATION_CREDENTIALS = jsonPath)
+bigrquery::bq_auth(path=jsonPath)
+Sys.setenv(GCLOUD_PROJECT = project_id)
+gargle::credentials_app_default()
 
 #cdm_database_schema <- ""
 #defines cdm_database_schema and adds itself to .gitignore
@@ -328,42 +345,26 @@ apply(notes_df, 1, write_notes, notes_folder=notes_folder_t3)
 
 output_leo_t1_df = read.csv(paste0(leo_nlp_output_folder,"T1/",nlp_output_filename_t1))
 
+colnames(output_leo_t1_df)
 
-connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
- 
-DatabaseConnector::insertTable(connection = connection,
-                               databaseSchema = target_database_schema,
-                               tableName=nlp_table_leo_output_t1,
-                               data=output_leo_t1_df_subset,
-                               dropTableIfExists = TRUE,
-                               createTable = TRUE,
-                               tempTable = FALSE,
-                               oracleTempSchema = NULL,
-                               progressBar = TRUE,
-                               camelCaseToSnakeCase = FALSE
-                              )
+stringr::str
+  
+df1 <-tools::file_path_sans_ext(output_leo_t1_df$DocID)
+    
+stringr::str_split_fixed(output_leo_t1_df$DocID, "_", 2) %>% 
+    add_column(
+  
 
-DatabaseConnector::disconnect(connection)
+
+bqTableTest <-bigrquery::bq_table(project_id, dataset_id, table = nlp_table_leo_output_t1)
+bigrquery::bq_table_upload(bqTableTest,output_leo_t1_df)
 
 # two failure modes in bigquery currently.  (1) appears to be due to size; (2) appears to be a syntax error
 # 10 rows (1:10) works; but (11:20) does not. 
 
 
-
-
-
-
-
-
-
 # test (2) by dropping Anchored_Sentance , Snippets in case there are characters leading to sql snytax erros.
 output_leo_t1_df <- select(output_leo_t1_df, -c(Anchored_Sentence, Snippets))
-
-
-
-
-
-
 output_leo_t1_df_subset = output_leo_t1_df[11:20,]
 
 # this now works. 
@@ -474,7 +475,6 @@ DatabaseConnector::insertTable(connection = connection,
                               )
 
 # Execute the Rollup Logic per each table
-
 # The resulting table should have the following schema
 # person_id: INT
 # treated: [1, 0] 
@@ -485,6 +485,7 @@ DatabaseConnector::insertTable(connection = connection,
 # intent_count: INT
 # proneTreatment: [treated, intent, notTreated, noDocumentation]
 
+setwd("/workdir/workdir/ProneNlp/")
 
 # Cohort 1
 
@@ -538,10 +539,16 @@ DatabaseConnector::executeSql(connection=DatabaseConnector::connect(connectionDe
                               sql=translatedSql)
 
 
-
 #####################################################################
 # Compute the incidence rates
 #####################################################################
+
+
+
+
+
+#################
+
 
 # debugging: insertTable works with a small dataframe.  
 testrow1=c("A","B","C","D")
