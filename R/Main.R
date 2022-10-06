@@ -438,7 +438,7 @@ DatabaseConnector::executeSql(connection=DatabaseConnector::connect(connectionDe
 
 # Cohort 2
 
-renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/nlp_rollup_logic.sql"),
+renderedSql <- SqlRender::render(SqlRender::readSql("ProneNlp/inst/sql/sql_server/nlp_rollup_logic.sql"),
                                  result_schema=target_database_schema,
                                  nlp_admission_summary=nlp_admission_summary_t2,
                                  target_cohort=target_cohort_table,
@@ -455,7 +455,7 @@ DatabaseConnector::executeSql(connection=DatabaseConnector::connect(connectionDe
 
 # Cohort 3
 
-renderedSql <- SqlRender::render(SqlRender::readSql("inst/sql/sql_server/nlp_rollup_logic.sql"),
+renderedSql <- SqlRender::render(SqlRender::readSql("ProneNlp/inst/sql/sql_server/nlp_rollup_logic.sql"),
                                  result_schema=target_database_schema,
                                  nlp_admission_summary=nlp_admission_summary_t3,
                                  target_cohort=target_cohort_table,
@@ -469,8 +469,6 @@ translatedSql <- SqlRender::translate(sql=renderedSql,
 
 DatabaseConnector::executeSql(connection=DatabaseConnector::connect(connectionDetails),
                               sql=translatedSql)
-
-
 
 #####################################################################
 # Compute the incidence rates
