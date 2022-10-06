@@ -15,11 +15,8 @@
 # limitations under the License.
 
 # Load libraries
-
-library()
-install.packages("dplyr")
+install.packages("tidyr")
 library(dplyr)
-
 library(stringr)
 
 install.packages("DatabaseConnector")
@@ -28,6 +25,8 @@ library(DatabaseConnector)
 library(SqlRender)
 library(usethis)
 
+install.packages("DBI")
+library(DBI)
 
 #Github credentials (and adds itself to .gitignore), if needed.
 #source("githubCreds.R")
@@ -55,11 +54,11 @@ subset_table_name_t3 <- "note_t3"
 
 leo_nlp_output_folder <- "/workdir/workdir/NLP_Results/"
 
-
 jsonPath <- "/workdir/gcloud/application_default_credentials.json"
 bqDriverPath <- "/workdir/workdir/BQDriver/"
 project_id <- "som-nero-nigam-starr"
 dataset_id <- "prone_nlp"
+
 
 #cdm_database_schema <- ""
 #defines cdm_database_schema and adds itself to .gitignore
@@ -67,6 +66,12 @@ source("/workdir/workdir/ProneNlp/cdmDatabaseSchema.R")
 vocabulary_database_schema <- cdm_database_schema
 target_database_schema <- "som-nero-nigam-starr.prone_nlp"
 target_cohort_table <- "cohort"
+
+# for BQ uploading
+Sys.setenv(GOOGLE_APPLICATION_CREDENTIALS = jsonPath)
+bigrquery::bq_auth(path=jsonPath)
+Sys.setenv(GCLOUD_PROJECT = project_id)
+gargle::credentials_app_default()
 
 # Connect to Database
 
@@ -83,16 +88,16 @@ connectionDetails <- DatabaseConnector::createConnectionDetails(dbms="bigquery",
 # # Create a test connection
 # connection <- DatabaseConnector::connect(connectionDetails)
 # 
-sql <- "
-SELECT
- COUNT(1) as counts
-FROM
- `bigquery-public-data.cms_synthetic_patient_data_omop.care_site`
-"
-
-counts <- DatabaseConnector::querySql(connection, sql)
-
-print(counts)
+# sql <- "
+# SELECT
+#  COUNT(1) as counts
+# FROM
+#  `bigquery-public-data.cms_synthetic_patient_data_omop.care_site`
+# "
+# 
+# counts <- DatabaseConnector::querySql(connection, sql)
+# 
+# print(counts)
 DatabaseConnector::disconnect(connection)
 
 # Create Cohort Table
@@ -245,7 +250,6 @@ write_notes <- function(x, notes_folder) {
 }
 
 ## Cohort 1
-
 # Output folder for notes
 notes_folder_t1 <- paste0(working_directory, subset_table_name_t1)
 system(paste0("mkdir ", notes_folder_t1))
@@ -326,50 +330,81 @@ apply(notes_df, 1, write_notes, notes_folder=notes_folder_t3)
 
 # Cohort 1
 
-output_leo_t1_df = read.csv(paste0(leo_nlp_output_folder,"T1/",nlp_output_filename_t1))
+#load data from csv and split DocID into patient_id and note_id 
+output_leo_t1_df = read.csv(paste0(leo_nlp_output_folder,"T1/",nlp_output_filename_t1)) %>% 
+  tidyr::separate(.,col=DocID, into=c("patient_id","note_id"),sep="_", remove=FALSE) %>%
+  tidyr::separate(., col=note_id, into=c("note_id"), sep=".txt",remove=TRUE)
 
-connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
-DatabaseConnector::insertTable(connection = connection,
-                               databaseSchema = target_database_schema,
-                               tableName=nlp_table_leo_output_t1,
-                               data=output_leo_t1_df,
-                               dropTableIfExists = TRUE,
-                               createTable = TRUE,
-                               tempTable = FALSE,
-                               oracleTempSchema = NULL,
-                               progressBar = TRUE,
-                               camelCaseToSnakeCase = FALSE
-                              )
+#upload into BigQuery  
+bigrquery::bq_table(project_id, dataset_id, table = nlp_table_leo_output_t1) %>%
+  bigrquery::bq_table_upload(.,output_leo_t1_df)
 
-DatabaseConnector::disconnect(connection)
+### uploading for other DBMS:
+# connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+# DatabaseConnector::insertTable(connection = connection,
+#                                databaseSchema = target_database_schema,
+#                                tableName=nlp_table_leo_output_t1,
+#                                data=output_leo_t1_df_subset,
+#                                dropTableIfExists = TRUE,
+#                                createTable = TRUE,
+#                                tempTable = FALSE,
+#                                oracleTempSchema = NULL,
+#                                progressBar = TRUE,
+#                                camelCaseToSnakeCase = FALSE
+#                               )
+# 
+# DatabaseConnector::disconnect(connection)
+
+rm(output_leo_t1_df)
 
 # Cohort 2
-output_leo_t2_df = read.csv(paste0(leo_nlp_output_folder,"T2/",nlp_output_filename_t2))
-DatabaseConnector::insertTable(connection = connection,
-                               databaseSchema = target_database_schema,
-                               tableName=nlp_table_leo_output_t2,
-                               data=output_leo_t2_df,
-                               dropTableIfExists = TRUE,
-                               createTable = TRUE,
-                               tempTable = FALSE,
-                               oracleTempSchema = NULL,
-                               progressBar = TRUE,
-                               camelCaseToSnakeCase = FALSE
-                              )
+
+output_leo_t2_df = read.csv(paste0(leo_nlp_output_folder,"T2/",nlp_output_filename_t2)) %>%
+  tidyr::separate(.,col=DocID, into=c("patient_id","note_id"),sep="_", remove=FALSE) %>%
+  tidyr::separate(., col=note_id, into=c("note_id"), sep=".txt",remove=TRUE)
+
+#upload into BigQuery  
+bigrquery::bq_table(project_id, dataset_id, table = nlp_table_leo_output_t2) %>%
+  bigrquery::bq_table_upload(.,output_leo_t2_df)
+
+##for other DBMS
+# DatabaseConnector::insertTable(connection = connection,
+#                                databaseSchema = target_database_schema,
+#                                tableName=nlp_table_leo_output_t2,
+#                                data=output_leo_t2_df,
+#                                dropTableIfExists = TRUE,
+#                                createTable = TRUE,
+#                                tempTable = FALSE,
+#                                oracleTempSchema = NULL,
+#                                progressBar = TRUE,
+#                                camelCaseToSnakeCase = FALSE
+#                               )
+
+rm(output_leo_t2_df)
 
 # Cohort 3
-output_leo_t3_df = read.csv(paste0(leo_nlp_output_folder,"T3/",nlp_output_filename_t3))
-DatabaseConnector::insertTable(connection = connection,
-                               databaseSchema = target_database_schema,
-                               tableName=nlp_table_leo_output_t3,
-                               data=output_leo_t3_df,
-                               dropTableIfExists = TRUE,
-                               createTable = TRUE,
-                               tempTable = FALSE,
-                               oracleTempSchema = NULL,
-                               progressBar = TRUE,
-                               camelCaseToSnakeCase = FALSE
-                              )
+output_leo_t3_df = read.csv(paste0(leo_nlp_output_folder,"T3/",nlp_output_filename_t3))  %>%
+  tidyr::separate(.,col=DocID, into=c("patient_id","note_id"),sep="_", remove=FALSE) %>%
+  tidyr::separate(., col=note_id, into=c("note_id"), sep=".txt",remove=TRUE)
+
+#upload into BigQuery  
+bigrquery::bq_table(project_id, dataset_id, table = nlp_table_leo_output_t3) %>%
+  bigrquery::bq_table_upload(.,output_leo_t3_df)
+
+## for other DBMS
+# DatabaseConnector::insertTable(connection = connection,
+#                                databaseSchema = target_database_schema,
+#                                tableName=nlp_table_leo_output_t3,
+#                                data=output_leo_t3_df,
+#                                dropTableIfExists = TRUE,
+#                                createTable = TRUE,
+#                                tempTable = FALSE,
+#                                oracleTempSchema = NULL,
+#                                progressBar = TRUE,
+#                                camelCaseToSnakeCase = FALSE
+#                               )
+
+rm(output_leo_t3_df)
 
 # Execute the Rollup Logic per each table
 
@@ -441,5 +476,26 @@ DatabaseConnector::executeSql(connection=DatabaseConnector::connect(connectionDe
 # Compute the incidence rates
 #####################################################################
 
+# debugging: insertTable works with a small dataframe.  
+testrow1=c("A","B","C","D")
+testrow2= c(1,2,3,4)
 
+testdf = as.data.frame(cbind(testrow1,testrow2))
+
+connection <- DatabaseConnector::connect(connectionDetails = connectionDetails)
+DatabaseConnector::insertTable(connection = connection,
+                               databaseSchema = target_database_schema,
+                               tableName=nlp_table_leo_output_t1,
+                               data=testdf,
+                               dropTableIfExists = TRUE,
+                               createTable = TRUE,
+                               tempTable = FALSE,
+                               oracleTempSchema = NULL,
+                               progressBar = TRUE,
+                               camelCaseToSnakeCase = FALSE
+)
+
+DatabaseConnector::disconnect(connection)
+
+object.size(output_leo_t1_df)
 

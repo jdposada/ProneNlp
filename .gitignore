@@ -78,3 +78,4 @@ githubCreds.R
 /workdir/workdir/ProneNlp/githubCreds.R
 /workdir/workdir/ProneNlp/cdmDatabaseSchema.R
 cdmDatabaseSchema.R
+*.Rproj
