@@ -73,3 +73,5 @@ BQDriver/slf4j-api-1.7.30.jar
 BQDriver/third-party-licenses.txt
 BQDriver/threetenbp-1.5.1.jar
 errorReportSql.txt
+connect_and_use_dplry.Rmd
+inst/.DS_Store
