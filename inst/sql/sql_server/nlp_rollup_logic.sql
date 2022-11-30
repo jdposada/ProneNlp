@@ -18,6 +18,7 @@ create table
  @result_schema.@nlp_admission_summary as
 with all_covid_admissions as (
     select 
+     cohort_definition_id,
      subject_id as person_id,
      cohort_start_date,
      cohort_end_date
@@ -53,7 +54,7 @@ NLP_labels_all as (
     group by person_id
 ),
 rolled_up_summary as (
-    Select distinct coh.person_id,
+    Select distinct coh.person_id, coh.cohort_definition_id,
         case
             when Treated >= 1 then 1
             else 0
