@@ -5,7 +5,7 @@ user <- "ohdsi"
 password <- "ohdsi"
 forwarded_port <- 9001
 
-bash_string <- sprintf("sudo docker run -d -v %s:/workdir/workdir -v %s:/workdir/gcloud --name=rstudio-ohdsi -p %s:8787 -e ROOT=TRUE -e USER=%s -e PASSWORD=%s %s",
+bash_string <- sprintf("sudo docker run -d -v %s:/workdir/workdir -v %s:/workdir/gcloud --name=proneNlp -p %s:8787 -e ROOT=TRUE -e USER=%s -e PASSWORD=%s %s",
 local_folder,
 gcloud_local_folder,
 forwarded_port,
